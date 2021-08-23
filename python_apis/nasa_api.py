@@ -1,8 +1,13 @@
-import tkinter as tk
+import tkinter
+import tkinter.font as tkFont
+
 from PIL import Image, ImageTk
-import requests
 from io import BytesIO
+
+import requests
 from urllib.request import urlopen
+
+from datetime import date
 
 query = {'api_key':'XWXTPc9xLBzXezMD08CHqWQAFV9fQdpllnNAmZLy', 'hd':'true'}
 response = requests.get('https://api.nasa.gov/planetary/apod', params=query)
@@ -10,37 +15,86 @@ response = requests.get('https://api.nasa.gov/planetary/apod', params=query)
 responseJSON = response.json()
 explanation = responseJSON["explanation"]
 hdImageLink = responseJSON["hdurl"]
-print(hdImageLink)
 
 class Interface:
 	def __init__(self, window):
-		self.window = window
 
-		self.description = tk.Label(
+		self.window = window
+		self.frame = tkinter.Frame(
 			master = self.window,
+			background='black'
+		)
+
+		self.titleFont = tkFont.Font(
+			family = "Arial",
+			size = 24,
+			weight = "bold"
+		)
+		self.detailsFont = tkFont.Font(
+			family = "Arial",
+			size = 12
+		)
+
+		self.frame.columnconfigure(0, weight = 1)
+
+		for i in range(3):
+			self.frame.rowconfigure(i, weight = 1)
+
+		today = date.today()
+		self.dateText = today.strftime("%B %d, %Y")
+
+		self.title = tkinter.Label(
+			master = self.frame,
+			text = " NASA POD: " + self.dateText,
+			font = self.titleFont,
+			fg = 'white',
+			background='black'
+		)
+		self.title.grid(column = 0, row = 0, sticky = tkinter.W, padx = (20, 20), pady = (20, 0))
+
+		self.description = tkinter.Label(
+			master = self.frame,
 			text = explanation,
 			justify = "left",
-			wraplength = 900,
-			padx = 10,
-			pady = 10,
+			wraplength = 600,
+			fg = 'white',
+			background='black',
+			font = self.detailsFont
 		)
-		self.description.pack()
+		self.description.grid(column = 0, row = 1, padx = 20, pady = 20)
 
 		url_stream = urlopen(hdImageLink)
 		raw_data = url_stream.read()
 		url_stream.close()
 
-		imageStream = Image.open(BytesIO(raw_data))
-		self.NASAphoto = ImageTk.PhotoImage(imageStream)
+		self.bytesImage = Image.open(BytesIO(raw_data))
+		self.imageWidth, self.imageHeight = self.bytesImage.size
 
-		self.imageLabel = tk.Label(
-			master = self.window,
-			image = self.NASAphoto			#save image as attribute to stop garbage collection
+		# resize image to fit nicely in window
+		if(self.imageWidth > self.imageHeight):
+			self.heightMultiplied = int(((self.imageHeight / self.imageWidth) * 600) // 1)
+			print("Height adjusted to " + str(self.heightMultiplied))
+			self.bytesImage = self.bytesImage.resize((600, self.heightMultiplied))
+		else:
+			self.widthMultiplied = int(((self.imageWidth / self.imageHeight) * 600) // 1)
+			print("Width adjusted to " + str(self.widthMultiplied))
+			self.bytesImage = self.bytesImage.resize((self.widthMultiplied, 600))
+
+		self.NASAphoto = ImageTk.PhotoImage(self.bytesImage)
+
+		self.imageLabel = tkinter.Label(
+			master = self.frame,
+			image = self.NASAphoto,			#save image as attribute to stop garbage collection
+			padx = 20,
+			pady = 20,
+			background='black'
 		)
-		self.imageLabel.pack(width=100, height=100)
+		self.imageLabel.grid(column = 0, row = 2)
+		self.frame.grid(column = 0, row = 0, pady = (0, 20))
 
 if __name__ == '__main__':
-	window = tk.Tk()
+	window = tkinter.Tk()
+	window.configure(background='black')
 	window.title('NASA Picture of the Day!')
 	app = Interface(window)
 	window.mainloop()
