@@ -20,11 +20,12 @@ class Interface:
 	def __init__(self, window):
 
 		self.window = window
-		self.frame = tkinter.Frame(
+		self.mainFrame = tkinter.Frame(
 			master = self.window,
 			background='black'
 		)
 
+		# create fonts to use throughout the application
 		self.titleFont = tkFont.Font(
 			family = "Arial",
 			size = 24,
@@ -35,25 +36,27 @@ class Interface:
 			size = 12
 		)
 
-		self.frame.columnconfigure(0, weight = 1)
+		self.mainFrame.columnconfigure(0, weight = 1)
 
 		for i in range(3):
-			self.frame.rowconfigure(i, weight = 1)
+			self.mainFrame.rowconfigure(i, weight = 1)
 
+		# set title text with current date and display
 		today = date.today()
 		self.dateText = today.strftime("%B %d, %Y")
 
 		self.title = tkinter.Label(
-			master = self.frame,
-			text = " NASA POD: " + self.dateText,
+			master = self.mainFrame,
+			text = "NASA POD: " + self.dateText,
 			font = self.titleFont,
 			fg = 'white',
 			background='black'
 		)
 		self.title.grid(column = 0, row = 0, sticky = tkinter.W, padx = (20, 20), pady = (20, 0))
 
+		# pull description from API and display
 		self.description = tkinter.Label(
-			master = self.frame,
+			master = self.mainFrame,
 			text = explanation,
 			justify = "left",
 			wraplength = 600,
@@ -61,8 +64,9 @@ class Interface:
 			background='black',
 			font = self.detailsFont
 		)
-		self.description.grid(column = 0, row = 1, padx = 20, pady = 20)
+		self.description.grid(column = 0, row = 1, padx = 20, pady = 20, sticky = tkinter.W)
 
+		# get the actual image
 		url_stream = urlopen(hdImageLink)
 		raw_data = url_stream.read()
 		url_stream.close()
@@ -77,20 +81,19 @@ class Interface:
 			self.bytesImage = self.bytesImage.resize((600, self.heightMultiplied))
 		else:
 			self.widthMultiplied = int(((self.imageWidth / self.imageHeight) * 600) // 1)
-			print("Width adjusted to " + str(self.widthMultiplied))
 			self.bytesImage = self.bytesImage.resize((self.widthMultiplied, 600))
 
 		self.NASAphoto = ImageTk.PhotoImage(self.bytesImage)
 
 		self.imageLabel = tkinter.Label(
-			master = self.frame,
+			master = self.mainFrame,
 			image = self.NASAphoto,			#save image as attribute to stop garbage collection
 			padx = 20,
 			pady = 20,
 			background='black'
 		)
 		self.imageLabel.grid(column = 0, row = 2)
-		self.frame.grid(column = 0, row = 0, pady = (0, 20))
+		self.mainFrame.grid(column = 0, row = 0, pady = (0, 20))
 
 if __name__ == '__main__':
 	window = tkinter.Tk()
